@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PostgreSQL
+postgres_data/
+
+# Redis
+dump.rdb
+
+# logs
+*.log
+logs/
+*.logs
+
+# tests
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# IDE
+.idea/
+*.iml
