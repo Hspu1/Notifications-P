@@ -7,7 +7,7 @@ from fastapi.openapi.docs import (
 )
 from uvicorn import run
 
-from app.core.lifespan import lifespan
+from app.core import lifespan
 
 
 def static_docs_urls(app: FastAPI):
