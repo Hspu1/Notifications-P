@@ -8,6 +8,7 @@ from fastapi.openapi.docs import (
 from uvicorn import run
 
 from app.core import lifespan
+from app.google_mailing import rout
 
 
 def static_docs_urls(app: FastAPI):
@@ -46,6 +47,7 @@ def create_app(testing: bool = False) -> FastAPI:
     if testing:
         app.state.testing = True
 
+    app.include_router(rout)
     static_docs_urls(app=app)
 
     return app
