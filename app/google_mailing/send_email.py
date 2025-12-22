@@ -8,6 +8,7 @@ from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv()
+# ! no limits on sending emails !
 
 
 async def send_email(recipient: str, subject: str, body: str) -> None:
