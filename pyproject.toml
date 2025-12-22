@@ -22,3 +22,74 @@ dev = [
     "mypy>=1.19.1",
     "ruff>=0.14.10",
 ]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+# disallow_any_generics = true        запрещает List вместо List[int]
+# disallow_any_unimported = true      запрещает типы из неимпортированных модулей
+# disallow_incomplete_defs = true     все аргументы должны иметь типы
+# disallow_subclassing_any = true     запрещает наследование от Any
+# disallow_untyped_calls = true       нельзя вызывать нетипизированные функции
+# disallow_untyped_defs = true        все функции должны иметь типы
+# disallow_untyped_decorators = true  декораторы должны быть типизированы
+# no_implicit_optional = true         нельзя x: int = None, только Optional[int]
+# warn_redundant_casts = true         предупреждает о лишних cast()
+# warn_return_any = true              предупреждает о возврате Any
+# warn_unused_ignores = true          предупреждает о лишних type: ignore
+# warn_unused_configs = true          предупреждает о неиспользуемых конфигах
+# check_untyped_defs = true           проверяет даже нетипизированные функции
+
+[tool.ruff]
+fix = false
+line-length = 111
+exclude = [
+    "alembic/versions/", "alembic/script.py.mako", "alembic.ini",
+    "pytest.ini", ".coverage", ".coverage.*", "htmlcov/", ".pytest_cache/",
+    "staticfiles/", "media/", "nginx/", "docker-compose*.yml", "Dockerfile*",
+    "pyproject.toml", "uv.lock", ".gitignore", ".gitignore.example",
+    ".env", ".env.example", ".venv", "venv"
+]
+lint.select = [
+    "E",   # Pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # Isort (сортировка импортов)
+    "UP",  # Pyupgrade (современный синтаксис)
+    "N",   # PEP8 naming (именование)
+    "B",   # Bugbear (потенциальные баги)
+    "C4",  # Comprehensions (генераторы коллекций)
+    "RUF", # Ruff-specific правила
+    "A",   # Async (асинхронность)
+    "ASYNC", # Flake8-async
+    "S",   # Security (безопасность)
+    "T10", # Debugger (отладочный код)
+    "EM",  # Error messages
+    "YTT", # Python 3.10+ features
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["LearningRabbitMQ"]  # name of the project
+
+[tool.ruff.format]
+quote-style = "double"  # двойные кавычки вместо одинарных
+indent-style = "space"  # пробелы вместо табов
+# Автоматическое определение переносов строк
+line-ending = "auto"  # автоматически определяет LF (Unix) или CRLF (Windows)
+
+[tool.ruff.lint.flake8-quotes]
+# Везде двойные кавычки
+avoid-escape = true
+docstring-quotes = "double"
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/versions/*.py" = [
+    "F401",  # unused import - в миграциях много неиспользуемых импортов
+    "E402",  # module import not at top of file - миграции нарушают этот порядок
+    "N802",  # function name should be lowercase - в миграциях camelCase
+    "N806",  # variable in function should be lowercase - имена таблиц в UPPERCASE
+]
+"tests/*.py" = [
+    "S101",    # use of assert - в тестах assert нормально
+    "PLR2004", # magic value - в тестах много "магических" значений
+    "ARG001",  # unused argument - в фикстурах аргументы могут не использоваться
+]
