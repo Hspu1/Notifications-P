@@ -7,6 +7,8 @@ from fastapi.openapi.docs import (
 )
 from uvicorn import run
 
+from app.core.lifespan import lifespan
+
 
 def static_docs_urls(app: FastAPI):
     @app.get("/docs", include_in_schema=False)
@@ -37,7 +39,7 @@ def create_app(testing: bool = False) -> FastAPI:
     app = FastAPI(
         title="Notifications-P",
         default_response_class=ORJSONResponse,
-        docs_url=None, redoc_url=None,
+        lifespan=lifespan, docs_url=None, redoc_url=None,
         swagger_ui_oauth2_redirect_url="/oauth2-redirect"
     )
 
