@@ -1,7 +1,8 @@
 from taskiq_aio_pika import AioPikaBroker
-from typing import Dict
 from pydantic import BaseModel
-from aio_pika import connect_robust, ExchangeType
+from aio_pika import ExchangeType, connect_robust
+
+from asyncio import run
 
 
 class RabbitConfig(BaseModel):
@@ -23,29 +24,22 @@ class RabbitConfig(BaseModel):
 class RabbitMQSetup:
     def __init__(self, config: RabbitConfig):
         (
-            self.config,
-            self.connection, self.channel,
+            self.config, self.connection, self.channel,
             self.main_exchange, self.dlx_exchange,
-            self.main_queue, self.retry_queue, self.dlq_queue
-        ) = (
-            config,
-            None, None,
-            None, None,
-            None, None, None
-        )
+            self.main_queue, self.dlq_queue
+        ) = (config, None, None, None, None, None, None)
 
     async def connect(self) -> None:
         connection_string = (
             f"amqp://{self.config.username}:{self.config.password}"
             f"@{self.config.host}:{self.config.port}/"
         )
-
         self.connection = await connect_robust(connection_string)
         self.channel = await self.connection.channel()
 
-    async def aclose(self) -> None:
+    async def close(self) -> None:
         if self.connection:
-            await self.connection.aclose()
+            await self.connection.close()
 
     async def declare_exchanges(self) -> None:
         self.main_exchange = await self.channel.declare_exchange(
@@ -83,17 +77,6 @@ class RabbitMQSetup:
             routing_key=self.config.dlq_routing_key
         )
 
-    async def setup_consumer_bindings(self, routing_keys: Dict[str, str]) -> None:
-        for queue_name, routing_key in routing_keys.items():
-            queue = await self.channel.declare_queue(
-                name=queue_name,
-                durable=True
-            )
-            await queue.bind(
-                exchange=self.main_exchange,
-                routing_key=routing_key
-            )
-
     async def setup_all(self) -> None:
         try:
             await self.connect()
@@ -102,16 +85,23 @@ class RabbitMQSetup:
             await self.bind_queues()
 
         except (ConnectionError, TimeoutError, ValueError):
-            await self.aclose()
+            await self.close()
             raise
 
         except Exception:
-            await self.aclose()
+            await self.close()
             raise
 
 
-def create_taskiq_broker(rabbit_setup: RabbitMQSetup) -> AioPikaBroker:
-    config = rabbit_setup.config
+async def preconfigure_rabbitmq():
+    config = RabbitConfig()
+    rabbit_setup = RabbitMQSetup(config)
+    await rabbit_setup.setup_all()
+
+
+async def setup_broker() -> AioPikaBroker:
+    await preconfigure_rabbitmq()
+    config = RabbitConfig()
 
     broker = AioPikaBroker(
         url=f"amqp://{config.username}:{config.password}@{config.host}:{config.port}",
@@ -135,9 +125,8 @@ def create_taskiq_broker(rabbit_setup: RabbitMQSetup) -> AioPikaBroker:
     return broker
 
 
-async def setup_broker() -> AioPikaBroker:
-    config = RabbitConfig()
-    rabbit_setup = RabbitMQSetup(config)
-    await rabbit_setup.setup_all()
+async def create_worker_broker():
+    return await setup_broker()
 
-    return create_taskiq_broker(rabbit_setup)
+# taskiq worker app.core.taskiq_broker:broker --fs-discover --tasks-pattern="app/google_mailing/send_email.py"
+broker = run(create_worker_broker())
