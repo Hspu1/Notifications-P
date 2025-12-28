@@ -2,7 +2,6 @@ from taskiq_aio_pika import AioPikaBroker
 from typing import Dict
 from pydantic import BaseModel
 from aio_pika import connect_robust, ExchangeType
-# taskiq worker app.core.taskiq_broker:broker --fs-discover --tasks-pattern="app/google_mailing/send_email.py"
 
 
 class RabbitConfig(BaseModel):
@@ -127,7 +126,6 @@ def create_taskiq_broker(rabbit_setup: RabbitMQSetup) -> AioPikaBroker:
             "x-dead-letter-routing-key": config.dlq_routing_key,
         },
 
-        declare_queues=False,  # не создаём автоматически, так как всё уже создано
         persistent=True,  # сохраняем сообщение на диск, предотвращая утечку данных
         queue_durable=True,  # очередь выживает при перезапуске
         exchange_durable=True,  # Exchange выживает при перезапуске
