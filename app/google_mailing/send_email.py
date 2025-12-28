@@ -1,7 +1,7 @@
 from aiosmtplib import send
 from pydantic import EmailStr
 
-from app.core.taskiq_broker import broker
+from app.core.taskiq_broker import setup_broker
 
 from email.message import EmailMessage
 from os import getenv
