@@ -126,11 +126,11 @@ def create_taskiq_broker(rabbit_setup: RabbitMQSetup) -> AioPikaBroker:
             "x-dead-letter-routing-key": config.dlq_routing_key,
         },
 
-        persistent=True,  # сохраняем сообщение на диск, предотвращая утечку данных
-        queue_durable=True,  # очередь выживает при перезапуске
-        exchange_durable=True,  # Exchange выживает при перезапуске
-        reconnect_on_fail=True,  # Автопереподключение
-        prefetch_count=20  # ограничение параллельной обработки, предотвращая перегрузку воркеров
+        persistent=True,
+        queue_durable=True,
+        exchange_durable=True,
+        reconnect_on_fail=True,
+        prefetch_count=20
     )
     return broker
 
