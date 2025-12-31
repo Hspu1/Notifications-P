@@ -1,8 +1,7 @@
 from taskiq_aio_pika import AioPikaBroker
 from pydantic import BaseModel
 from aio_pika import ExchangeType, connect_robust
-
-from asyncio import run
+import asyncio
 
 
 class RabbitConfig(BaseModel):
@@ -11,122 +10,84 @@ class RabbitConfig(BaseModel):
     username: str = "guest"
     password: str = "guest"
 
-    main_exchange: str = "taskiq_exchange"
-    dlx_exchange: str = "dlx_taskiq_exchange"
-
-    main_queue: str = "taskiq_queue"
-    dlq_queue: str = "dlq_taskiq_queue"
-
+    main_exchange: str = "main_x"
+    main_queue: str = "main_q"
     main_routing_key: str = main_queue
-    dlq_routing_key: str = dlq_queue
+
+    dlx_exchange: str = "dlx"
+    dlx_queue: str = "dlq"
+    dlx_routing_key: str = dlx_queue
 
 
-class RabbitMQSetup:
-    def __init__(self, config: RabbitConfig):
-        (
-            self.config, self.connection, self.channel,
-            self.main_exchange, self.dlx_exchange,
-            self.main_queue, self.dlq_queue
-        ) = (config, None, None, None, None, None, None)
+async def declare_dl_structure(config: RabbitConfig) -> None:
+    connection = await connect_robust(
+        f"amqp://{config.username}:{config.password}@{config.host}:{config.port}"
+    )
 
-    async def connect(self) -> None:
-        connection_string = (
-            f"amqp://{self.config.username}:{self.config.password}"
-            f"@{self.config.host}:{self.config.port}/"
+    try:
+        channel = await connection.channel()
+        dlx_exchange = await channel.declare_exchange(
+            config.dlx_exchange,
+            type=ExchangeType.DIRECT,
+            durable=True
         )
-        self.connection = await connect_robust(connection_string)
-        self.channel = await self.connection.channel()
-
-    async def close(self) -> None:
-        if self.connection:
-            await self.connection.close()
-
-    async def declare_exchanges(self) -> None:
-        self.main_exchange = await self.channel.declare_exchange(
-            name=self.config.main_exchange,
-            durable=True,
-            type=ExchangeType.TOPIC
-        )
-        self.dlx_exchange = await self.channel.declare_exchange(
-            name=self.config.dlx_exchange,
-            durable=True,
-            type=ExchangeType.TOPIC
-        )
-
-    async def declare_queues(self) -> None:
-        self.main_queue = await self.channel.declare_queue(
-            name=self.config.main_queue,
+        dlq_queue = await channel.declare_queue(
+            config.dlx_queue,
             durable=True,
             arguments={
-                "x-dead-letter-exchange": self.config.dlx_exchange,
-                "x-dead-letter-routing-key": self.config.dlq_routing_key,
+                "x-queue-mode": "lazy"
             }
         )
-        self.dlq_queue = await self.channel.declare_queue(
-            name=self.config.dlq_queue,
-            durable=True,
-        )
+        await dlq_queue.bind(dlx_exchange, config.dlx_routing_key)
 
-    async def bind_queues(self) -> None:
-        await self.main_queue.bind(
-            exchange=self.main_exchange,
-            routing_key=self.config.main_routing_key
-        )
-        await self.dlq_queue.bind(
-            exchange=self.dlx_exchange,
-            routing_key=self.config.dlq_routing_key
-        )
-
-    async def setup_all(self) -> None:
-        try:
-            await self.connect()
-            await self.declare_exchanges()
-            await self.declare_queues()
-            await self.bind_queues()
-
-        except (ConnectionError, TimeoutError, ValueError):
-            await self.close()
-            raise
-
-        except Exception:
-            await self.close()
-            raise
+    finally:
+        await connection.close()
 
 
-async def preconfigure_rabbitmq():
+def setup_broker() -> AioPikaBroker:
     config = RabbitConfig()
-    rabbit_setup = RabbitMQSetup(config)
-    await rabbit_setup.setup_all()
 
-
-async def setup_broker() -> AioPikaBroker:
-    await preconfigure_rabbitmq()
-    config = RabbitConfig()
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(declare_dl_structure(config))
+        else:
+            asyncio.run(declare_dl_structure(config))
+    except RuntimeError:
+        asyncio.run(declare_dl_structure(config))
 
     broker = AioPikaBroker(
         url=f"amqp://{config.username}:{config.password}@{config.host}:{config.port}",
+        reconnect_on_fail=True,
+        reconnect_interval=5,
+        reconnect_max_attempts=10,
 
         queue_name=config.main_queue,
         exchange_name=config.main_exchange,
-        dead_letter_queue_name=config.dlq_queue,
-        dead_letter_exchange_name=config.dlx_exchange,
-
-        queue_arguments={
-            "x-dead-letter-exchange": config.dlx_exchange,
-            "x-dead-letter-routing-key": config.dlq_routing_key,
-        },
-
-        persistent=True,
+        routing_key=config.main_routing_key,
+        declare_queues=True,
+        declare_exchange=True,
         queue_durable=True,
         exchange_durable=True,
-        reconnect_on_fail=True,
-        prefetch_count=20
+        queue_arguments={
+            "x-dead-letter-exchange": config.dlx_exchange,
+            "x-dead-letter-routing-key": config.dlx_routing_key,
+        },
+
+        auto_delete=False,
+        exclusive=False,
+
+        persistent=True,
+        max_connection_pool_size=10,
+        mandatory=True,
+        prefetch_count=7,
+
+        socket_timeout=10,
+        heartbeat=30,
+        blocked_connection_timeout=30,
     )
+
     return broker
 
 
-async def create_worker_broker():
-    return await setup_broker()
-
-# taskiq worker app.core.taskiq_broker:broker --fs-discover --tasks-pattern="app/google_mailing/send_email.py"
-broker = run(create_worker_broker())
+broker = setup_broker()
