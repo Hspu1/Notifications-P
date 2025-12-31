@@ -1,7 +1,8 @@
+from asyncio import run, get_event_loop, create_task
+
 from taskiq_aio_pika import AioPikaBroker
 from pydantic import BaseModel
 from aio_pika import ExchangeType, connect_robust
-import asyncio
 
 
 class RabbitConfig(BaseModel):
@@ -48,13 +49,15 @@ def setup_broker() -> AioPikaBroker:
     config = RabbitConfig()
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = get_event_loop()
         if loop.is_running():
-            asyncio.create_task(declare_dl_structure(config))
+            create_task(declare_dl_structure(config))
         else:
-            asyncio.run(declare_dl_structure(config))
+            run(declare_dl_structure(config))
+
     except RuntimeError:
-        asyncio.run(declare_dl_structure(config))
+        run(declare_dl_structure(config))
+    #  !!! wb other exceptions !!!
 
     broker = AioPikaBroker(
         url=f"amqp://{config.username}:{config.password}@{config.host}:{config.port}",
@@ -74,17 +77,24 @@ def setup_broker() -> AioPikaBroker:
             "x-dead-letter-routing-key": config.dlx_routing_key,
         },
 
-        auto_delete=False,
-        exclusive=False,
 
-        persistent=True,
-        max_connection_pool_size=10,
-        mandatory=True,
-        prefetch_count=7,
+        auto_delete=False,  # не удалять очередь автоматически при отключении потребителя
+        exclusive=False,  # очередь доступна для нескольких потребителей
 
-        socket_timeout=10,
-        heartbeat=30,
-        blocked_connection_timeout=30,
+
+        persistent=True,  # сохранять сообщения на диске для устойчивости
+        mandatory=True,  # гарантировать доставку сообщений
+        max_connection_pool_size=10,  # макс 10 tcp соединений с рэббитом (что-то около золотой середины)
+        prefetch_count=7,  # каждый потребитель берет макс 7 сообщений, чтобы не перегружался
+
+        socket_timeout=10,  # 10с ждем ответа рэббита, после чего отваливаемся
+        heartbeat=30,  # проверяем соединение каждые 30с
+        blocked_connection_timeout=30,  # ждем 30с при перегрузки рэббита перед разрыванием соединения
+        declare_queues_kwargs={
+            "arguments": {
+                "x-queue-type": "quorum",  # распределенная, отказоустойчивая
+            }
+        }
     )
 
     return broker
