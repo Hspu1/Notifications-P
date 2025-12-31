@@ -74,22 +74,17 @@ def setup_broker() -> AioPikaBroker:
             "x-dead-letter-routing-key": config.dlx_routing_key,
         },
 
-        auto_delete=False,  # не удалять очередь автоматически при отключении потребителя
-        exclusive=False,  # очередь доступна для нескольких потребителей
+        auto_delete=False,
+        exclusive=False,
 
-        persistent=True,  # сохранять сообщения на диске для устойчивости
-        mandatory=True,  # гарантировать доставку сообщений
-        max_connection_pool_size=10,  # макс 10 tcp соединений с рэббитом (что-то около золотой середины)
-        prefetch_count=7,  # каждый потребитель берет макс 7 сообщений, чтобы не перегружался
+        persistent=True,
+        max_connection_pool_size=10,
+        mandatory=True,
+        prefetch_count=7,
 
-        socket_timeout=10,  # 10с ждем ответа рэббита, после чего отваливаемся
-        heartbeat=30,  # проверяем соединение каждые 30с
-        blocked_connection_timeout=30,  # ждем 30с при перегрузки рэббита перед разрыванием соединения
-        declare_queues_kwargs={
-            "arguments": {
-                "x-queue-type": "quorum",  # распределенная, отказоустойчивая
-            }
-        }
+        socket_timeout=10,
+        heartbeat=30,
+        blocked_connection_timeout=30,
     )
 
     return broker
