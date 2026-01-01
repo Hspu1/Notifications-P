@@ -19,7 +19,7 @@ async def send_email(recipient: str, subject: str, body: str) -> None:
     await send(
         msg, hostname="smtp.gmail.com", port=587,
         start_tls=True, username=sender_email,
-        password=sender_psw, timeout=67
+        password=sender_psw, timeout=15
     )
 
 
@@ -29,7 +29,7 @@ class EmailService:
         self._email_task = self._register_task()
 
     def _register_task(self):
-        @self.broker.task(task_name="save_email", timeout=70, priority=0, retry_count=3, retry_backoff=True, retry_backoff_delay=1, retry_jitter=True)
+        @self.broker.task(task_name="save_email", timeout=40, priority=0, retry_count=2, retry_backoff=True, retry_backoff_delay=60, retry_jitter=True)
         async def send_email_interlayer(recipient: EmailStr, subject: str, body: str) -> None:
             await send_email(recipient=recipient, subject=subject, body=body)
 
