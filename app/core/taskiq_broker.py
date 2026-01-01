@@ -33,7 +33,7 @@ def setup_broker() -> AioPikaBroker:
             dlx = await channel.declare_exchange(config.dlx_exchange, ExchangeType.DIRECT, durable=True)
             dlq = await channel.declare_queue(
                 config.dlx_queue, durable=True,
-                arguments={"x-queue-mode": "lazy", "x-queue-type": "quorum", "x-message-ttl": 24*60*60}
+                arguments={"x-queue-mode": "lazy", "x-queue-type": "quorum", "x-message-ttl": 24*60*60*1000}
             )
             await dlq.bind(dlx, config.dlx_queue)
 
