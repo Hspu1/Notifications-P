@@ -17,7 +17,7 @@ class SendEmailScheme(BaseModel):
 
 @rout.post("/send", status_code=202)
 async def send_email(
-        input_data: SendEmailScheme,
+        input_data: Annotated[SendEmailScheme, Depends()],
         email_service: EmailService = Depends(get_email_service)
 ):
     await email_service.send_email_async(

@@ -27,12 +27,12 @@ class RabbitConfig(BaseModel):
 
     declare_queues: bool = True
     declare_exchange: bool = True
-    queue_durable: bool = True
-    exchange_durable: bool = True
+    queue_durable: bool = False
+    exchange_durable: bool = False
     queue_args: dict[str, str | int] = {
-        "x-dead-letter-exchange": dlx_exchange,
-        "x-dead-letter-routing-key": dlx_routing_key,
-        "x-queue-type": "quorum",
+        # "x-dead-letter-exchange": dlx_exchange,
+        # "x-dead-letter-routing-key": dlx_routing_key,
+        # "x-queue-type": "quorum",
         "x-max-priority": 3
     }
 
@@ -80,11 +80,7 @@ async def declare_dlx(config: RabbitConfig):
 async def setup_broker_async() -> AioPikaBroker:
     config = RabbitConfig()
 
-    try:
-        await declare_dlx(config)
-    except Exception:
-        # !!! no individual exceptions !!!
-        pass
+    await declare_dlx(config)
 
     return AioPikaBroker(
         url=config.amqp_url,
