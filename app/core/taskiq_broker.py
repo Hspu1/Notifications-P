@@ -11,7 +11,6 @@ class RabbitConfig(BaseModel):
     port: int = 5672
     username: str = "guest"
     password: str = "guest"
-    amqp_url: str = f"amqp://{username}:{password}@{host}:{port}"
     reconnect_on_fail: bool = True
     reconnect_interval: int = 5
     reconnect_max_attempts: int = 10
@@ -41,6 +40,11 @@ class RabbitConfig(BaseModel):
     socket_timeout: int = 30  # 30с ждем ответа рэббита, после чего отваливаемся
     heartbeat: int = 60  # проверяем соединение каждые 60с
     blocked_connection_timeout: int = 60  # ждем 60с при перегрузки рэббита перед разрыванием соединения
+
+    @property
+    def amqp_url(self) -> str:
+        """создаём ссылку динамически для большей гибкости и безопасности"""
+        return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}"
 
 
 @asynccontextmanager
