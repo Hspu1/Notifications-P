@@ -19,7 +19,7 @@ async def send_email(recipient: str, subject: str, body: str) -> None:
     await send(
         msg, hostname="smtp.gmail.com", port=587,
         start_tls=True, username=sender_email,
-        password=sender_psw, timeout=15
+        password=sender_psw, timeout=30
     )
 
 
