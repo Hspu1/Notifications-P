@@ -26,9 +26,9 @@ async def send_email(recipient: str, subject: str, body: str) -> None:
 class EmailService:
     def __init__(self, broker: AioPikaBroker):
         self.broker = broker
-        self._email_task = self._register_task()
+        self.email_task = self.register_task()
 
-    def _register_task(self):
+    def register_task(self):
         @self.broker.task(task_name="save_email", timeout=40, priority=0, retry_count=2, retry_backoff=True, retry_backoff_delay=60, retry_jitter=True)
         async def send_email_interlayer(recipient: EmailStr, subject: str, body: str) -> None:
             await send_email(recipient=recipient, subject=subject, body=body)
@@ -36,7 +36,7 @@ class EmailService:
         return send_email_interlayer
 
     async def send_email_async(self, recipient: EmailStr, subject: str, body: str):
-        return await self._email_task.kiq(
+        return await self.email_task.kiq(
             recipient=recipient,
             subject=subject,
             body=body

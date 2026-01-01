@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 
 class RabbitConfig(BaseModel):
-    # !!! BaseSettings is for configs, BaseModel is for business logic!!!
+    # !!! BaseSettings is for configs, BaseModel is for business logic !!!
 
     host: str = "localhost"
     port: int = 5672
