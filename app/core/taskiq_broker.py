@@ -30,9 +30,9 @@ class RabbitConfig(BaseModel):
     queue_durable: bool = False
     exchange_durable: bool = False
     queue_args: dict[str, str | int] = {
-        # "x-dead-letter-exchange": dlx_exchange,
-        # "x-dead-letter-routing-key": dlx_routing_key,
-        # "x-queue-type": "quorum",
+        "x-dead-letter-exchange": dlx_exchange,
+        "x-dead-letter-routing-key": dlx_routing_key,
+        "x-queue-type": "quorum",
         "x-max-priority": 3
     }
 
