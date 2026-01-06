@@ -3,11 +3,11 @@ from aio_pika import ExchangeType, connect_robust
 from asyncio import run
 
 from taskiq_aio_pika import AioPikaBroker
-from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 
-class RabbitConfig(BaseModel):
-    # !!! BaseSettings is for configs, BaseModel is for business logic !!!
+class RabbitConfig(BaseSettings):
+    """model_config = SettingsConfigDict (+ .env)"""
 
     host: str = "localhost"
     port: int = 5672
@@ -28,30 +28,19 @@ class RabbitConfig(BaseModel):
     declare_exchange: bool = True
     queue_durable: bool = True
     exchange_durable: bool = True
-    queue_args: dict[str, str | int] = {
-        "x-dead-letter-exchange": dlx_exchange,
-        "x-dead-letter-routing-key": dlx_routing_key,
-        "x-queue-type": "quorum",
-        "x-max-priority": 3
-    }
 
     max_connection_pool_size: int = 3  # макс 3 tcp соединений с рэббитом (что-то около золотой середины)
     prefetch_count: int = 1  # каждый потребитель берет макс 1 сообщение, чтобы не перегружался
-    # (и чтобы лимиты бесплатного Google SMTP сервера не привысил)
+    # (и чтобы лимиты бесплатного Google SMTP сервера не превысил)
     socket_timeout: int = 30  # 30с ждем ответа рэббита, после чего отваливаемся
     heartbeat: int = 60  # проверяем соединение каждые 60с
     blocked_connection_timeout: int = 60  # ждем 60с при перегрузки рэббита перед разрыванием соединения
-
-    @property
-    def amqp_url(self) -> str:
-        """создаём ссылку динамически для большей гибкости и безопасности"""
-        return f"amqp://{self.username}:{self.password}@{self.host}:{self.port}"
 
 
 @asynccontextmanager
 async def get_connection(config: RabbitConfig):
     connection = await connect_robust(
-        config.amqp_url,
+        url=f"amqp://{config.username}:{config.password}@{config.host}:{config.port}",
         timeout=config.socket_timeout,
         heartbeat=config.heartbeat
     )
@@ -81,7 +70,7 @@ async def setup_broker_async() -> AioPikaBroker:
     await declare_dlx(config)
 
     return AioPikaBroker(
-        url=config.amqp_url,
+        url=f"amqp://{config.username}:{config.password}@{config.host}:{config.port}",
         reconnect_on_fail=config.reconnect_on_fail,
         reconnect_interval=config.reconnect_interval,
         reconnect_max_attempts=config.reconnect_max_attempts,
@@ -92,7 +81,12 @@ async def setup_broker_async() -> AioPikaBroker:
         declare_exchange=config.declare_exchange,
         queue_durable=config.queue_durable,
         exchange_durable=config.exchange_durable,
-        queue_arguments=config.queue_args,
+        queue_arguments={
+            "x-dead-letter-exchange": config.dlx_exchange,
+            "x-dead-letter-routing-key": config.dlx_routing_key,
+            "x-queue-type": "quorum",
+            "x-max-priority": 3
+        },
 
         max_connection_pool_size=config.max_connection_pool_size,
         prefetch_count=config.prefetch_count,
