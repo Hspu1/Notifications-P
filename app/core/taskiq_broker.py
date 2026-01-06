@@ -108,5 +108,5 @@ def setup_broker() -> AioPikaBroker:
     return run(setup_broker_async())
 
 
-# taskiq worker app.core.taskiq_broker:broker --fs-discover --tasks-pattern="app/google_mailing/send_email.py"
+# taskiq worker app.core.taskiq_broker:broker app.google_mailing.send_email
 broker = setup_broker()
