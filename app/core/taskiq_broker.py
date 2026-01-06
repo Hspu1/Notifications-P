@@ -19,7 +19,6 @@ class RabbitConfig(BaseModel):
 
     main_exchange: str = "main_x"
     main_queue: str = "main_q"
-    main_routing_key: str = "main_q"
 
     dlx_exchange: str = "dlx"
     dlx_queue: str = "dlq"
@@ -89,7 +88,6 @@ async def setup_broker_async() -> AioPikaBroker:
 
         queue_name=config.main_queue,
         exchange_name=config.main_exchange,
-        routing_key=config.main_routing_key,
         declare_queues=config.declare_queues,
         declare_exchange=config.declare_exchange,
         queue_durable=config.queue_durable,
