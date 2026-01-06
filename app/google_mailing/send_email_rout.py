@@ -3,8 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, EmailStr
 
-from app.google_mailing.dependencies import get_email_service
-from app.google_mailing.send_email import EmailService
+from app.google_mailing.send_email import create_task_async
 
 rout = APIRouter(prefix="/email", tags=["gmail"])
 
@@ -16,13 +15,6 @@ class SendEmailScheme(BaseModel):
 
 
 @rout.post("/send", status_code=202)
-async def send_email(
-        input_data: Annotated[SendEmailScheme, Depends()],
-        email_service: EmailService = Depends(get_email_service)
-):
-    await email_service.send_email_async(
-        recipient=input_data.recipient,
-        subject=input_data.subject,
-        body=input_data.body
-    )
+async def send_email(input_data: Annotated[SendEmailScheme, Depends()]):
+    await create_task_async(recipient=input_data.recipient, subject=input_data.subject, body=input_data.body)
     return {"status": "accepted"}

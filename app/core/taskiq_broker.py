@@ -27,8 +27,8 @@ class RabbitConfig(BaseModel):
 
     declare_queues: bool = True
     declare_exchange: bool = True
-    queue_durable: bool = False
-    exchange_durable: bool = False
+    queue_durable: bool = True
+    exchange_durable: bool = True
     queue_args: dict[str, str | int] = {
         "x-dead-letter-exchange": dlx_exchange,
         "x-dead-letter-routing-key": dlx_routing_key,
@@ -79,7 +79,6 @@ async def declare_dlx(config: RabbitConfig):
 
 async def setup_broker_async() -> AioPikaBroker:
     config = RabbitConfig()
-
     await declare_dlx(config)
 
     return AioPikaBroker(
