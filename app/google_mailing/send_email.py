@@ -27,12 +27,8 @@ async def send_email(recipient: str, subject: str, body: str) -> None:
 
 @broker.task(task_name="save_email", timeout=40, priority=0, retry_count=2, retry_backoff=True, retry_backoff_delay=60, retry_jitter=True)
 async def send_email_async(recipient: EmailStr, subject: str, body: str):
-    try:
-        raise Exception("Test DLQ")
-        # await send_email(recipient=recipient, subject=subject, body=body)
-    except Exception:
-        # manual nack??
-        raise
+    raise Exception("Test DLQ")
+    # await send_email(recipient=recipient, subject=subject, body=body)
 
 
 async def create_task_async(recipient: EmailStr, subject: str, body: str):

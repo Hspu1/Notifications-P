@@ -69,7 +69,7 @@ async def setup_broker_async() -> AioPikaBroker:
     config = RabbitConfig()
     await declare_dlx(config)
 
-    return AioPikaBroker(
+    broker = AioPikaBroker(
         url=f"amqp://{config.username}:{config.password}@{config.host}:{config.port}",
         reconnect_on_fail=config.reconnect_on_fail,
         reconnect_interval=config.reconnect_interval,
@@ -94,6 +94,8 @@ async def setup_broker_async() -> AioPikaBroker:
         heartbeat=config.heartbeat,
         blocked_connection_timeout=config.blocked_connection_timeout,
     )
+
+    return broker
 
 
 def setup_broker() -> AioPikaBroker:

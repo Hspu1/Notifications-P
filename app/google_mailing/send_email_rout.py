@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, EmailStr
+from fastapi_limiter.depends import RateLimiter
 
 from app.google_mailing.send_email import create_task_async
 

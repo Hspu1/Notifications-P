@@ -10,10 +10,13 @@ requires-python = ">=3.13"
 dependencies = [
     "aiosmtplib>=5.0.0",
     "dotenv>=0.9.9",
+    "fastapi-limiter>=0.1.6",
     "fastapi[standard]>=0.127.0",
     "orjson>=3.11.5",
+    "redis>=7.1.0",
     "taskiq>=0.12.1",
     "taskiq-aio-pika>=0.5.0",
+    "taskiq-redis>=1.2.1",
     "uvicorn[standard]>=0.40.0",
 ]
 
