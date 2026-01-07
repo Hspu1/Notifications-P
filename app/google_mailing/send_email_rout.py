@@ -15,7 +15,14 @@ class SendEmailScheme(BaseModel):
     body: Annotated[str, Field(min_length=1, max_length=100 * 1024)]
 
 
-@rout.post("/send", status_code=202)
+limiter = [
+    Depends(RateLimiter(times=100, seconds=86400)),
+    Depends(RateLimiter(times=20, seconds=3600)),
+    Depends(RateLimiter(times=3, seconds=60))
+]
+
+
+@rout.post("/send", status_code=202, dependencies=limiter)
 async def send_email(input_data: Annotated[SendEmailScheme, Depends()]):
     await create_task_async(recipient=input_data.recipient, subject=input_data.subject, body=input_data.body)
     return {"status": "accepted"}

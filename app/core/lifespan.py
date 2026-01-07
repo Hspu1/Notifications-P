@@ -2,8 +2,9 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi_limiter import FastAPILimiter
 
-from app.core.redis_config import redis_cache
+from app.core.redis_config import redis_cache, redis_client
 from app.core.taskiq_broker import broker
 
 
@@ -12,11 +13,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     if not broker.is_worker_process:
         await broker.startup()
 
-    app.state.redis_cache = redis_cache
     app.state.broker = broker
+    app.state.redis_cache = redis_cache
+    await FastAPILimiter.init(redis_client)
 
     yield
 
     if not broker.is_worker_process:
         await broker.shutdown()
     await app.state.redis_cache.aclose()
+    await FastAPILimiter.close()

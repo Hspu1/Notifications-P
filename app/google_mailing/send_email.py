@@ -8,7 +8,6 @@ from pydantic import EmailStr
 from app.core.taskiq_broker import broker
 
 load_dotenv()
-# !!! no limits on sending emails !!!
 
 
 async def send_email(recipient: str, subject: str, body: str) -> None:
@@ -27,8 +26,8 @@ async def send_email(recipient: str, subject: str, body: str) -> None:
 
 @broker.task(task_name="save_email", timeout=40, priority=0, retry_count=2, retry_backoff=True, retry_backoff_delay=60, retry_jitter=True)
 async def send_email_async(recipient: EmailStr, subject: str, body: str):
-    raise Exception("Test DLQ")
-    # await send_email(recipient=recipient, subject=subject, body=body)
+    # raise Exception("Test DLQ")
+    await send_email(recipient=recipient, subject=subject, body=body)
 
 
 async def create_task_async(recipient: EmailStr, subject: str, body: str):
