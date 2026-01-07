@@ -16,9 +16,9 @@ class SendEmailScheme(BaseModel):
 
 
 limiter = [
-    Depends(RateLimiter(times=100, seconds=86400)),
-    Depends(RateLimiter(times=20, seconds=3600)),
-    Depends(RateLimiter(times=3, seconds=60))
+    Depends(RateLimiter(times=3, seconds=60)),  # minute
+    Depends(RateLimiter(times=20, seconds=3600)),  # hourly
+    Depends(RateLimiter(times=100, seconds=86400))  # daily
 ]
 
 
