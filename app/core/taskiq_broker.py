@@ -3,11 +3,11 @@ from aio_pika import ExchangeType, connect_robust
 from asyncio import run
 
 from taskiq_aio_pika import AioPikaBroker
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel
 
 
-class RabbitConfig(BaseSettings):
-    """model_config = SettingsConfigDict (+ .env)"""
+class RabbitConfig(BaseModel):
+    """BaseSettings model_config = SettingsConfigDict (+ .env)"""
 
     host: str = "localhost"
     port: int = 5672
