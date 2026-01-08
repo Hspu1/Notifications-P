@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from aiosmtplib import send
 from pydantic import EmailStr
 
-from app.core.taskiq_broker import broker
+from app.core.configs.taskiq import broker
 
 load_dotenv()
 
