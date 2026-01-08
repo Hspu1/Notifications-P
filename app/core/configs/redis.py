@@ -1,7 +1,7 @@
 from redis.asyncio import Redis
 
 
-class RedisCache:
+class RedisConfig:
     def __init__(self, redis_client: Redis, namespace: str = "translator"):
         self._redis = redis_client
         self._namespace = namespace
@@ -22,4 +22,4 @@ class RedisCache:
 
 
 redis_client = Redis(host="127.0.0.1", port=6379, decode_responses=True, db=0)
-redis_cache = RedisCache(redis_client)
+redis = RedisConfig(redis_client)
