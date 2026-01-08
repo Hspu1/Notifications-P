@@ -104,3 +104,4 @@ def setup_broker() -> AioPikaBroker:
 
 # taskiq worker app.core.taskiq_broker:broker app.google_mailing.send_email
 broker = setup_broker()
+# раздели рэббит конфиг и таскайкь + добавь бэкэнд на рэдисе к последнему + конфиг селери расширь (чек huh)
