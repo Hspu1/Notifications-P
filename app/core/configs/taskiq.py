@@ -1,6 +1,7 @@
 from asyncio import run
 
 from taskiq_aio_pika import AioPikaBroker
+from taskiq_redis import RedisAsyncResultBackend
 
 from app.core.configs.rabbit import RabbitConfig, declare_dlx
 
@@ -34,8 +35,13 @@ async def setup_broker_async() -> AioPikaBroker:
         heartbeat=config.heartbeat,
         blocked_connection_timeout=config.blocked_connection_timeout,
     )
+    result_backend = RedisAsyncResultBackend(
+        redis_url="redis://localhost:6379/2",
+        result_ex_time=24 * 3600,  # 24 часа
+        result_serializer="json",
+    )
 
-    return broker
+    return broker.with_result_backend(result_backend)
 
 
 def setup_broker() -> AioPikaBroker:
@@ -44,4 +50,3 @@ def setup_broker() -> AioPikaBroker:
 
 # taskiq worker app.core.taskiq_broker:broker app.google_mailing.send_email
 broker = setup_broker()
-# добавь бэкэнд на рэдисе к таскику
