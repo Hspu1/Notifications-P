@@ -21,5 +21,5 @@ class RedisConfig:
         await self._redis.aclose()
 
 
-redis_client = Redis(host="127.0.0.1", port=6379, decode_responses=True, db=0)
+redis_client = Redis(host="127.0.0.1", port=6379, decode_responses=True, db=3)
 redis = RedisConfig(redis_client)

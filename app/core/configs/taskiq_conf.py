@@ -37,8 +37,7 @@ async def setup_broker_async() -> AioPikaBroker:
     )
     result_backend = RedisAsyncResultBackend(
         redis_url="redis://localhost:6379/2",
-        result_ex_time=24 * 3600,  # 24 часа
-        result_serializer="json",
+        result_ex_time=24 * 3600,  # 24 часа`
     )
 
     return broker.with_result_backend(result_backend)
