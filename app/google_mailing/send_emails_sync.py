@@ -15,7 +15,7 @@ load_dotenv()
     retry_backoff_max=3600, retry_jitter=True, acks_late=True,
     autoretry_for=(SMTPConnectError, ConnectionError, TimeoutError)
 )
-def send_email(recipient: str, subject: str, body: str):
+def send_email(recipient: str, subject: str, body: str) -> dict[str, str]:
     sender_email, sender_psw = getenv("SENDER_EMAIL"), getenv("SENDER_PSW")
 
     msg = EmailMessage()

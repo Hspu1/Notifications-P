@@ -4,13 +4,14 @@ from dotenv import load_dotenv
 
 from aiosmtplib import send
 from pydantic import EmailStr
+from taskiq import AsyncTaskiqTask
 
 from app.core.configs.taskiq_conf import broker
 
 load_dotenv()
 
 
-async def send_email(recipient: str, subject: str, body: str) -> None:
+async def send_email(recipient: EmailStr, subject: str, body: str) -> None:
     sender_email, sender_psw = getenv("SENDER_EMAIL"), getenv("SENDER_PSW")
 
     msg = EmailMessage()
@@ -29,10 +30,10 @@ async def send_email(recipient: str, subject: str, body: str) -> None:
     priority=0, retry_count=2, retry_backoff=True,
     retry_backoff_delay=60, retry_jitter=True
 )
-async def send_email_async(recipient: EmailStr, subject: str, body: str):
+async def send_email_async(recipient: EmailStr, subject: str, body: str) -> None:
     # raise Exception("Test DLQ")
     await send_email(recipient=recipient, subject=subject, body=body)
 
 
-async def create_task_async(recipient: EmailStr, subject: str, body: str):
+async def create_task_async(recipient: EmailStr, subject: str, body: str) -> AsyncTaskiqTask:
     return await send_email_async.kiq(recipient=recipient, subject=subject, body=body)

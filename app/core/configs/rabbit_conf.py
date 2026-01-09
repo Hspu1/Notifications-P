@@ -1,5 +1,7 @@
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from aio_pika import ExchangeType, connect_robust
+
+from aio_pika import ExchangeType, connect_robust, RobustConnection
 
 from pydantic import BaseModel
 
@@ -36,7 +38,7 @@ class RabbitConfig(BaseModel):
 
 
 @asynccontextmanager
-async def get_connection(config: RabbitConfig):
+async def get_connection(config: RabbitConfig) -> AsyncIterator[RobustConnection]:
     connection = await connect_robust(
         url=f"amqp://{config.username}:{config.password}@{config.host}:{config.port}",
         timeout=config.socket_timeout,
@@ -48,7 +50,7 @@ async def get_connection(config: RabbitConfig):
         await connection.close()
 
 
-async def declare_dlx(config: RabbitConfig):
+async def declare_dlx(config: RabbitConfig) -> None:
     async with get_connection(config) as connection:
         async with connection.channel() as channel:
             dlx = await channel.declare_exchange(config.dlx_exchange, ExchangeType.DIRECT, durable=True)
