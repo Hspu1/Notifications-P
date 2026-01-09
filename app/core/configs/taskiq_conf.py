@@ -3,7 +3,7 @@ from asyncio import run
 from taskiq_aio_pika import AioPikaBroker
 from taskiq_redis import RedisAsyncResultBackend
 
-from app.core.configs.rabbit import RabbitConfig, declare_dlx
+from app.core.configs.rabbit_conf import RabbitConfig, declare_dlx
 
 
 async def setup_broker_async() -> AioPikaBroker:
@@ -48,5 +48,5 @@ def setup_broker_sync() -> AioPikaBroker:
     return run(setup_broker_async())
 
 
-# taskiq worker app.core.taskiq_broker:broker app.google_mailing.send_email
+# taskiq worker app.core.configs.taskiq_conf:broker app.google_mailing
 broker = setup_broker_sync()

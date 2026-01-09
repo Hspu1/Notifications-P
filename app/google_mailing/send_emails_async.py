@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from aiosmtplib import send
 from pydantic import EmailStr
 
-from app.core.configs.taskiq import broker
+from app.core.configs.taskiq_conf import broker
 
 load_dotenv()
 
@@ -24,7 +24,11 @@ async def send_email(recipient: str, subject: str, body: str) -> None:
     )
 
 
-@broker.task(task_name="save_email", timeout=40, priority=0, retry_count=2, retry_backoff=True, retry_backoff_delay=60, retry_jitter=True)
+@broker.task(
+    task_name="save_email_async", timeout=40,
+    priority=0, retry_count=2, retry_backoff=True,
+    retry_backoff_delay=60, retry_jitter=True
+)
 async def send_email_async(recipient: EmailStr, subject: str, body: str):
     # raise Exception("Test DLQ")
     await send_email(recipient=recipient, subject=subject, body=body)

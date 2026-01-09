@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
 
-from app.core.configs.redis import redis_client
-from app.core.configs.taskiq import broker
+from app.core.configs.redis_conf import redis_client
+from app.core.configs.taskiq_conf import broker
 
 
 @asynccontextmanager

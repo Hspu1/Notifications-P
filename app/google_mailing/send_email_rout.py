@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, EmailStr
 from fastapi_limiter.depends import RateLimiter
 
-from app.google_mailing.send_email import create_task_async
+from app.google_mailing.send_emails_async import create_task_async
+from app.google_mailing.send_emails_sync import send_email
 
 rout = APIRouter(prefix="/email", tags=["gmail"])
 
@@ -22,7 +23,13 @@ limiter = [
 ]
 
 
-@rout.post("/send", status_code=202, dependencies=limiter)
-async def send_email(input_data: Annotated[SendEmailScheme, Depends()]):
+@rout.post("/send-using-taskiq", status_code=202, dependencies=limiter)
+async def send_email_async(input_data: Annotated[SendEmailScheme, Depends()]):
     await create_task_async(recipient=input_data.recipient, subject=input_data.subject, body=input_data.body)
     return {"status": "accepted"}
+
+
+@rout.post("/send-using-celery", status_code=202, dependencies=limiter)
+def send_email_sync(input_data: Annotated[SendEmailScheme, Depends()]):
+    result = send_email(recipient=input_data.recipient, subject=input_data.subject, body=input_data.body)
+    return result
