@@ -47,5 +47,5 @@ def setup_broker_sync() -> AioPikaBroker:
     return run(setup_broker_async())
 
 
-# taskiq worker app.core.configs.taskiq_conf:broker app.google_mailing
+# taskiq worker app.core.configs.taskiq_conf:broker app.google_mailing.send_emails_async
 broker = setup_broker_sync()

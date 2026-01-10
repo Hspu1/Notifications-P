@@ -54,6 +54,7 @@ async def declare_dlx(config: RabbitConfig) -> None:
     async with get_connection(config) as connection:
         async with connection.channel() as channel:
             dlx = await channel.declare_exchange(config.dlx_exchange, ExchangeType.DIRECT, durable=True)
+            # ExchangeType.TOPIC???
             dlq = await channel.declare_queue(
                 config.dlx_queue,
                 durable=True,
